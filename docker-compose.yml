@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # TimescaleDB - High-performance time-series database
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: meshscout-timescaledb
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:-meshscout}
+      POSTGRES_USER: ${DATABASE_USER:-meshscout}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-changeme_secure_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./.docker/data/timescaledb:/var/lib/postgresql/data
+      - ./packages/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - meshscout-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-meshscout}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MQTT Ingestion Service - Listens to MQTT and decodes Meshtastic packets
+  ingestion:
+    build:
+      context: .
+      dockerfile: services/ingestion/Dockerfile
+    container_name: meshscout-ingestion
+    restart: unless-stopped
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      MQTT_BROKER: ${MQTT_BROKER:-mqtt://host.docker.internal}
+      MQTT_PORT: ${MQTT_PORT:-1883}
+      MQTT_USERNAME: ${MQTT_USERNAME}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+      MQTT_TOPIC: ${MQTT_TOPIC:-msh/+/2/e/#}
+      MQTT_CLIENT_ID: ${MQTT_CLIENT_ID:-meshscout-ingestion}
+      MESHTASTIC_KEY: ${MESHTASTIC_KEY}
+    networks:
+      - meshscout-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # API Backend - REST API for frontend
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    container_name: meshscout-api
+    restart: unless-stopped
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      API_PORT: ${API_PORT:-3001}
+      API_HOST: ${API_HOST:-0.0.0.0}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+    ports:
+      - "${API_PORT:-3001}:${API_PORT:-3001}"
+    networks:
+      - meshscout-network
+
+  # Web Frontend - Next.js with Mapbox
+  web:
+    build:
+      context: .
+      dockerfile: services/web/Dockerfile
+    container_name: meshscout-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      NEXT_PUBLIC_MAPBOX_TOKEN: ${NEXT_PUBLIC_MAPBOX_TOKEN}
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-ws://localhost:3001}
+    ports:
+      - "3000:3000"
+    networks:
+      - meshscout-network
+
+networks:
+  meshscout-network:
+    driver: bridge
+
+volumes:
+  timescaledb-data:

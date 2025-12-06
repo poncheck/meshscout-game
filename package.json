@@ -1,0 +1,31 @@
+{
+  "name": "meshscout-game",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MeshScout - Multiplayer location-based game using Meshtastic network",
+  "workspaces": [
+    "services/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "docker-compose up",
+    "build": "docker-compose build",
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "logs": "docker-compose logs -f",
+    "db:migrate": "cd packages/database && npm run migrate",
+    "db:studio": "cd packages/database && npm run studio"
+  },
+  "keywords": [
+    "meshtastic",
+    "mqtt",
+    "game",
+    "h3",
+    "mapbox"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

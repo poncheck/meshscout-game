@@ -1,0 +1,26 @@
+{
+  "name": "@meshscout/ingestion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MQTT ingestion service for Meshtastic packets",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@meshscout/database": "workspace:*",
+    "mqtt": "^5.3.4",
+    "@buf/meshtastic_protobufs.bufbuild_es": "^1.7.2-20240110200328-6aab36452e41.1",
+    "@bufbuild/protobuf": "^1.7.2",
+    "dotenv": "^16.3.1",
+    "h3-js": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.0"
+  }
+}

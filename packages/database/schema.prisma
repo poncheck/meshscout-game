@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Węzły Meshtastic w sieci
+model Node {
+  id             String   @id // Node ID z Meshtastic (hex)
+  longName       String?
+  shortName      String?
+  hwModel        String?
+  role           String?
+
+  latitude       Float?
+  longitude      Float?
+  altitude       Int?
+
+  lastSeen       DateTime @default(now())
+  firstSeen      DateTime @default(now())
+
+  // H3 index dla lokalizacji (resolution 8)
+  h3Index        String?  @db.VarChar(15)
+
+  // Relacje
+  sentPackets    Packet[] @relation("SentPackets")
+  receivedPackets Packet[] @relation("ReceivedPackets")
+  hops           PacketHop[]
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([h3Index])
+  @@index([lastSeen])
+  @@index([latitude, longitude])
+}
+
+// Wszystkie pakiety w sieci
+model Packet {
+  id             String   @id @default(cuid())
+  packetId       Int      // Meshtastic packet ID
+
+  fromNodeId     String
+  fromNode       Node     @relation("SentPackets", fields: [fromNodeId], references: [id])
+
+  toNodeId       String?
+  toNode         Node?    @relation("ReceivedPackets", fields: [toNodeId], references: [id])
+
+  channel        Int      @default(0)
+  portnum        Int      // Meshtastic portnum
+
+  // Payload
+  payload        Bytes?
+  payloadText    String?  @db.Text
+
+  // Metadata
+  rxTime         DateTime @default(now())
+  rxSnr          Float?
+  rxRssi         Int?
+  hopLimit       Int?
+  hopStart       Int?
+  wantAck        Boolean  @default(false)
+
+  // Traceroute specific
+  isTraceroute   Boolean  @default(false)
+  tracerouteId   String?
+  traceroute     Traceroute? @relation(fields: [tracerouteId], references: [id])
+
+  // Packet hops (route)
+  hops           PacketHop[]
+
+  createdAt      DateTime @default(now())
+
+  @@index([packetId])
+  @@index([fromNodeId])
+  @@index([toNodeId])
+  @@index([rxTime])
+  @@index([isTraceroute])
+  @@index([tracerouteId])
+}
+
+// Trasy pakietów traceroute
+model Traceroute {
+  id             String   @id @default(cuid())
+
+  initiatorId    String   // Node który rozpoczął traceroute
+  targetId       String?  // Node docelowy (jeśli określony)
+
+  // Statystyki
+  totalHops      Int      @default(0)
+  totalDistance  Float    @default(0) // w km
+
+  // Punkty dla gracza
+  points         Int      @default(0)
+
+  playerId       String?
+  player         Player?  @relation(fields: [playerId], references: [id])
+
+  // Pakiety w tym traceroute
+  packets        Packet[]
+
+  startTime      DateTime @default(now())
+  endTime        DateTime?
+
+  status         String   @default("active") // active, completed, failed
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([initiatorId])
+  @@index([playerId])
+  @@index([startTime])
+  @@index([status])
+}
+
+// Jednotcze przeskoki pakietu
+model PacketHop {
+  id             String   @id @default(cuid())
+
+  packetId       String
+  packet         Packet   @relation(fields: [packetId], references: [id])
+
+  nodeId         String
+  node           Node     @relation(fields: [nodeId], references: [id])
+
+  hopNumber      Int      // Kolejność w trasie (0, 1, 2...)
+
+  // Metryki
+  snr            Float?
+  rssi           Int?
+
+  timestamp      DateTime @default(now())
+
+  @@unique([packetId, hopNumber])
+  @@index([packetId])
+  @@index([nodeId])
+}
+
+// Gracze
+model Player {
+  id             String   @id @default(cuid())
+
+  // Identyfikacja
+  nodeId         String?  @unique // Główny node gracza
+  username       String   @unique
+  email          String?  @unique
+
+  // Statystyki
+  totalPoints    Int      @default(0)
+  totalTraceroutes Int    @default(0)
+  longestRoute   Float    @default(0) // km
+
+  // Traceroutes gracza
+  traceroutes    Traceroute[]
+  scores         Score[]
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([totalPoints])
+  @@index([username])
+}
+
+// Historia punktów
+model Score {
+  id             String   @id @default(cuid())
+
+  playerId       String
+  player         Player   @relation(fields: [playerId], references: [id])
+
+  points         Int
+  reason         String   // "traceroute", "distance_bonus", etc.
+
+  // Referencje
+  tracerouteId   String?
+
+  timestamp      DateTime @default(now())
+
+  @@index([playerId])
+  @@index([timestamp])
+}
+
+// Agregacja danych w siatce H3
+model H3Grid {
+  id             String   @id // H3 index (resolution 8)
+
+  // Statystyki dla hexagonu
+  nodeCount      Int      @default(0)
+  packetCount    Int      @default(0)
+  lastActivity   DateTime @default(now())
+
+  // Agregowane metryki
+  avgSnr         Float?
+  avgRssi        Float?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([lastActivity])
+  @@index([packetCount])
+}
