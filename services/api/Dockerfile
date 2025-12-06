@@ -1,26 +1,26 @@
 FROM node:20-alpine AS base
 
-# Install dependencies only when needed
-FROM base AS deps
-WORKDIR /app
-
-# Copy package files
-COPY package.json package-lock.json* ./
-COPY packages/database/package.json ./packages/database/
-COPY services/api/package.json ./services/api/
-
-# Install dependencies
-RUN npm ci
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl
 
 # Build stage
 FROM base AS builder
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
+# Copy entire project
 COPY . .
+
+# Install dependencies for database package
+RUN cd packages/database && npm install
 
 # Generate Prisma Client
 RUN cd packages/database && npx prisma generate
+
+# Build database package
+RUN cd packages/database && npm run build
+
+# Install dependencies for API service
+RUN cd services/api && npm install
 
 # Build API service
 RUN cd services/api && npm run build
