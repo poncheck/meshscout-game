@@ -1,9 +1,6 @@
 -- Enable TimescaleDB extension
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 
--- Enable PostGIS for geographic calculations (optional but useful)
-CREATE EXTENSION IF NOT EXISTS postgis;
-
 -- After Prisma creates tables, we'll convert them to hypertables
 -- This will be done in a migration script after initial schema creation
 
