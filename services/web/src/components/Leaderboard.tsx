@@ -2,6 +2,14 @@
 
 import { useLeaderboard } from '@/hooks/useLeaderboard'
 
+interface Player {
+  id: string
+  username: string
+  totalPoints: number
+  totalTraceroutes: number
+  longestRoute: number
+}
+
 export function Leaderboard() {
   const { players, isLoading } = useLeaderboard()
 
@@ -15,7 +23,7 @@ export function Leaderboard() {
         <div className="text-gray-500">Loading...</div>
       ) : players && players.length > 0 ? (
         <div className="space-y-2">
-          {players.map((player, index) => (
+          {players.map((player: Player, index: number) => (
             <div
               key={player.id}
               className="bg-gray-800 rounded-lg p-3 hover:bg-gray-700 transition"
