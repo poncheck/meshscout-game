@@ -1,22 +1,15 @@
 FROM node:20-alpine AS base
 
-# Install dependencies only when needed
-FROM base AS deps
+# Build stage
+FROM base AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package files
-COPY services/web/package.json services/web/package-lock.json* ./
+# Copy web service
+COPY services/web ./
 
 # Install dependencies
-RUN npm ci
-
-# Build stage
-FROM base AS builder
-WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY services/web ./
+RUN npm install
 
 # Set build-time environment variables
 ARG NEXT_PUBLIC_API_URL
