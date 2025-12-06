@@ -13,8 +13,8 @@
   "dependencies": {
     "@meshscout/database": "file:../../packages/database",
     "mqtt": "^5.3.4",
-    "@buf/meshtastic_protobufs.bufbuild_es": "^1.7.2-20240110200328-6aab36452e41.1",
-    "@bufbuild/protobuf": "^1.7.2",
+    "@meshtastic/protobufs": "^2.6.7",
+    "protobufjs": "^7.2.5",
     "dotenv": "^16.3.1",
     "h3-js": "^4.1.0"
   },
