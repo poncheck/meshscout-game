@@ -13,6 +13,9 @@ RUN cd packages/database && npm install
 # Generate Prisma Client
 RUN cd packages/database && npx prisma generate
 
+# Build database package
+RUN cd packages/database && npm run build
+
 # Install dependencies for API service
 RUN cd services/api && npm install
 
