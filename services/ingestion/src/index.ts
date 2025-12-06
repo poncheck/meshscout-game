@@ -85,7 +85,12 @@ class IngestionService {
       // Extract and update node information if available
       const nodeInfo = this.decoder.extractNodeInfo(decoded);
       if (nodeInfo) {
-        await this.dbService.upsertNode(nodeInfo);
+        await this.dbService.upsertNode({
+          id: nodeInfo.nodeId,
+          latitude: nodeInfo.lat,
+          longitude: nodeInfo.lon,
+          altitude: nodeInfo.alt,
+        });
       }
 
       this.packetsProcessed++;
