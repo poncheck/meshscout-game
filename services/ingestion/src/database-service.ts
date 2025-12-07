@@ -137,24 +137,27 @@ export class DatabaseService {
 
   /**
    * Ensure node exists (create minimal entry if not)
+   * Handles race conditions where multiple concurrent requests try to create the same node
    */
   private async ensureNodeExists(nodeId: string): Promise<void> {
     try {
-      const exists = await prisma.node.findUnique({
+      await prisma.node.upsert({
         where: { id: nodeId },
+        create: {
+          id: nodeId,
+          lastSeen: new Date(),
+          firstSeen: new Date(),
+        },
+        update: {
+          // Just update lastSeen on conflict - node already exists
+          lastSeen: new Date(),
+        },
       });
-
-      if (!exists) {
-        await prisma.node.create({
-          data: {
-            id: nodeId,
-            lastSeen: new Date(),
-            firstSeen: new Date(),
-          },
-        });
+    } catch (error: any) {
+      // Ignore unique constraint errors - another concurrent request already created the node
+      if (error.code !== 'P2002') {
+        console.error(`Error ensuring node ${nodeId} exists:`, error);
       }
-    } catch (error) {
-      console.error(`Error ensuring node ${nodeId} exists:`, error);
     }
   }
 
