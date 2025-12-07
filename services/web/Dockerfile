@@ -2,13 +2,14 @@ FROM node:20-alpine AS base
 
 # Build stage
 FROM base AS builder
-WORKDIR /app
+WORKDIR /app/services/web
 
-# Copy entire project
-COPY . .
+# Copy web service files
+COPY services/web/package.json services/web/package-lock.json* ./
+RUN npm install
 
-# Install dependencies for web service
-RUN cd services/web && npm install
+# Copy the rest of the web service files
+COPY services/web .
 
 # Set build-time environment variables
 ARG NEXT_PUBLIC_API_URL
@@ -20,7 +21,7 @@ ENV NEXT_PUBLIC_MAPBOX_TOKEN=$NEXT_PUBLIC_MAPBOX_TOKEN
 ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 
 # Build Next.js
-RUN cd services/web && npm run build
+RUN npm run build
 
 # Production stage
 FROM base AS runner
@@ -31,9 +32,8 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/services/web/public ./public
-
-# Copy node_modules and built files
+# Copy built files and dependencies from builder
+COPY --from=builder --chown=nextjs:nodejs /app/services/web/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/services/web/.next ./.next
 COPY --from=builder --chown=nextjs:nodejs /app/services/web/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/services/web/package.json ./package.json
