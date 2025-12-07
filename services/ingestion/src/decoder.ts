@@ -65,6 +65,10 @@ export class MeshtasticDecoder {
 
       const meshPacket = envelope.packet;
 
+      // DEBUG: Log what we actually have in the packet
+      console.log(`🔎 MeshPacket keys: ${Object.keys(meshPacket).join(', ')}`);
+      console.log(`🔎 Has encrypted: ${!!meshPacket.encrypted}, Has decoded: ${!!meshPacket.decoded}`);
+
       // Extract basic packet info
       const result: any = {
         channelId: envelope.channelId || channelName,
