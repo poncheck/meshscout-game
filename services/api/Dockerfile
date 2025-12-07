@@ -1,5 +1,4 @@
-FROM node:20-alpine AS base
-
+>>>>>>> b51037e69fcfaedc3b8d7652cc4e39179eafe2df
 # Build stage
 FROM base AS builder
 WORKDIR /app

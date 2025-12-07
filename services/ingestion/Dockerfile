@@ -1,5 +1,11 @@
 FROM node:20-alpine AS base
 
+<<<<<<< HEAD
+=======
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl
+
+>>>>>>> b51037e69fcfaedc3b8d7652cc4e39179eafe2df
 # Build stage
 FROM base AS builder
 WORKDIR /app
