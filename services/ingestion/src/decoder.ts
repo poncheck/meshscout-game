@@ -99,10 +99,8 @@ export class MeshtasticDecoder {
           result.packet.decoded = data;
           result.packet.portnum = data.portnum;
 
-          // Debug logging
-          if (data.portnum && data.portnum !== 0) {
-            console.log(`✅ Decoded packet with portnum=${data.portnum} from node ${meshPacket.from}`);
-          }
+          // ALWAYS log portnum to debug
+          console.log(`🔍 Decrypted packet: portnum=${data.portnum}, hasPayload=${!!data.payload}, payloadSize=${data.payload?.length || 0}`);
 
           // Parse specific payload types
           if (data.payload && data.portnum) {
@@ -121,12 +119,16 @@ export class MeshtasticDecoder {
         result.packet.decoded = meshPacket.decoded;
         result.packet.portnum = meshPacket.decoded.portnum;
 
+        console.log(`🔓 Unencrypted packet: portnum=${meshPacket.decoded.portnum}, hasPayload=${!!meshPacket.decoded.payload}`);
+
         if (meshPacket.decoded.payload && meshPacket.decoded.portnum) {
           result.packet.parsedPayload = this.parsePayload(
             meshPacket.decoded.payload,
             meshPacket.decoded.portnum
           );
         }
+      } else {
+        console.log(`⚠️  Packet has no encrypted or decoded data`);
       }
 
       return result;
