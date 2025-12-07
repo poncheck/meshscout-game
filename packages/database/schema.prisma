@@ -42,7 +42,7 @@ model Node {
 // Wszystkie pakiety w sieci
 model Packet {
   id             String   @id @default(cuid())
-  packetId       Int      // Meshtastic packet ID
+  packetId       BigInt   // Meshtastic packet ID (unsigned 32-bit, can exceed INT4)
 
   fromNodeId     String
   fromNode       Node     @relation("SentPackets", fields: [fromNodeId], references: [id])
