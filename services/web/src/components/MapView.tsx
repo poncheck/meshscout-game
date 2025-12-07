@@ -8,6 +8,21 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ''
 
+interface Node {
+  id: string
+  shortName?: string
+  longName?: string
+  latitude?: number
+  longitude?: number
+}
+
+interface H3Grid {
+  id: string
+  packetCount: number
+  nodeCount: number
+  boundary: number[][]
+}
+
 export function MapView() {
   const mapRef = useRef<MapRef>(null)
   const [viewport, setViewport] = useState({
@@ -36,7 +51,7 @@ export function MapView() {
             type="geojson"
             data={{
               type: 'FeatureCollection',
-              features: grids.map((grid) => ({
+              features: grids.map((grid: H3Grid) => ({
                 type: 'Feature',
                 geometry: {
                   type: 'Polygon',
@@ -80,8 +95,8 @@ export function MapView() {
         {/* Node Markers */}
         {nodes &&
           nodes
-            .filter((node) => node.latitude && node.longitude)
-            .map((node) => (
+            .filter((node: Node) => node.latitude && node.longitude)
+            .map((node: Node) => (
               <Marker
                 key={node.id}
                 longitude={node.longitude!}
