@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
-import * as protobuf from 'protobufjs';
 import * as meshtastic from '@meshtastic/protobufs';
+import { fromBinary } from '@bufbuild/protobuf';
 
 /**
  * Meshtastic Message Decoder
@@ -56,7 +56,7 @@ export class MeshtasticDecoder {
       }
 
       // Parse ServiceEnvelope using Meshtastic protobuf
-      const envelope = meshtastic.ServiceEnvelope.decode(payload);
+      const envelope = fromBinary(meshtastic.Mqtt.ServiceEnvelopeSchema, payload);
 
       if (!envelope.packet) {
         console.warn('No packet in envelope');
@@ -95,7 +95,7 @@ export class MeshtasticDecoder {
           );
 
           // Try to decode the decrypted Data message
-          const data = meshtastic.Data.decode(decrypted);
+          const data = fromBinary(meshtastic.Mesh.DataSchema, new Uint8Array(decrypted));
           result.packet.decoded = data;
           result.packet.portnum = data.portnum;
 
@@ -184,7 +184,7 @@ export class MeshtasticDecoder {
       // TRACEROUTE_APP = 70
 
       if (portnum === 3) { // POSITION_APP
-        const position = meshtastic.Position.decode(payload);
+        const position = fromBinary(meshtastic.Mesh.PositionSchema, payload);
         return {
           type: 'position',
           latitude: position.latitudeI ? position.latitudeI / 1e7 : null,
@@ -193,7 +193,7 @@ export class MeshtasticDecoder {
           time: position.time,
         };
       } else if (portnum === 4) { // NODEINFO_APP
-        const nodeInfo = meshtastic.User.decode(payload);
+        const nodeInfo = fromBinary(meshtastic.Mesh.UserSchema, payload);
         return {
           type: 'nodeinfo',
           id: nodeInfo.id,
@@ -208,7 +208,7 @@ export class MeshtasticDecoder {
           text: Buffer.from(payload).toString('utf8'),
         };
       } else if (portnum === 70) { // TRACEROUTE_APP
-        const traceroute = meshtastic.RouteDiscovery.decode(payload);
+        const traceroute = fromBinary(meshtastic.Mesh.RouteDiscoverySchema, payload);
         return {
           type: 'traceroute',
           route: traceroute.route || [],
