@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "description": "Database schema and migrations for MeshScout",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "scripts": {
+    "build": "tsc",
     "migrate": "prisma migrate deploy",
     "migrate:dev": "prisma migrate dev",
     "generate": "prisma generate",
@@ -16,6 +17,7 @@
     "@prisma/client": "^5.22.0"
   },
   "devDependencies": {
+    "@types/node": "^20.11.5",
     "prisma": "^5.22.0",
     "typescript": "^5.3.3"
   }
