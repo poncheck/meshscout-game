@@ -24,7 +24,7 @@ RUN cd services/web && npm run build
 
 # Production stage
 FROM base AS runner
-WORKDIR /app
+WORKDIR /app/services/web
 
 ENV NODE_ENV=production
 
@@ -33,9 +33,10 @@ RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/services/web/public ./public
 
-# Automatically leverage output traces to reduce image size
-COPY --from=builder --chown=nextjs:nodejs /app/services/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/services/web/.next/static ./.next/static
+# Copy node_modules and built files
+COPY --from=builder --chown=nextjs:nodejs /app/services/web/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/services/web/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/services/web/package.json ./package.json
 
 USER nextjs
 
@@ -44,4 +45,4 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["node", "server.js"]
+CMD ["node_modules/.bin/next", "start"]
