@@ -53,7 +53,7 @@ export class MeshtasticDecoder {
           from: 0,
           to: 0,
           channel: 0,
-          rxTime: BigInt(Date.now() / 1000),
+          rxTime: BigInt(Math.floor(Date.now() / 1000)),
           encrypted: payload,
         }
       };
