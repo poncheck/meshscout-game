@@ -90,6 +90,8 @@ class IngestionService {
           latitude: nodeInfo.lat,
           longitude: nodeInfo.lon,
           altitude: nodeInfo.alt,
+          shortName: nodeInfo.shortName,
+          longName: nodeInfo.longName,
         });
       }
 
