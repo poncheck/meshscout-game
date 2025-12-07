@@ -80,6 +80,7 @@ export class MeshtasticDecoder {
           hopLimit: meshPacket.hopLimit,
           hopStart: meshPacket.hopStart,
           wantAck: meshPacket.wantAck || false,
+          portnum: 0, // Default portnum, will be overwritten if decoded successfully
         }
       };
 
@@ -98,13 +99,22 @@ export class MeshtasticDecoder {
           result.packet.decoded = data;
           result.packet.portnum = data.portnum;
 
+          // Debug logging
+          if (data.portnum && data.portnum !== 0) {
+            console.log(`✅ Decoded packet with portnum=${data.portnum} from node ${meshPacket.from}`);
+          }
+
           // Parse specific payload types
           if (data.payload && data.portnum) {
             result.packet.parsedPayload = this.parsePayload(data.payload, data.portnum);
+            if (result.packet.parsedPayload) {
+              console.log(`📍 Parsed payload type: ${result.packet.parsedPayload.type}, portnum: ${data.portnum}`);
+            }
           }
         } catch (decryptError) {
-          console.warn('Failed to decrypt/decode packet:', decryptError);
+          console.warn(`Failed to decrypt/decode packet from node ${meshPacket.from}:`, decryptError);
           result.packet.encrypted = meshPacket.encrypted;
+          result.packet.portnum = 0; // Set default portnum for encrypted packets that failed to decrypt
         }
       } else if (meshPacket.decoded) {
         // Packet is not encrypted
