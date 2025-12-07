@@ -9,6 +9,7 @@ import { packetsRouter } from './routes/packets';
 import { leaderboardRouter } from './routes/leaderboard';
 import { h3Router } from './routes/h3';
 import { statsRouter } from './routes/stats';
+import debugRouter from './routes/debug';
 
 const PORT = process.env.API_PORT || 3001;
 const HOST = process.env.API_HOST || '0.0.0.0';
@@ -58,6 +59,7 @@ class ApiServer {
     this.app.use('/api/nodes', nodesRouter);
     this.app.use('/api/packets', packetsRouter);
     this.app.use('/api/leaderboard', leaderboardRouter);
+    this.app.use('/api/debug', debugRouter);
     this.app.use('/api/h3', h3Router);
     this.app.use('/api/stats', statsRouter);
 
