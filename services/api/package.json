@@ -11,7 +11,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@meshscout/database": "workspace:*",
+    "@meshscout/database": "file:../../packages/database",
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "ws": "^8.16.0",
